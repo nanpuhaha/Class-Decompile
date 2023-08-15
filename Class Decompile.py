@@ -19,23 +19,17 @@ IGNORED_CLASS_LABEL_NAMES = [
 
 
 def is_ignored_class(class_name):
-    for prefix in IGNORED_CLASS_PREFIXES:
-        if class_name.startswith(prefix):
-            return True
-    return False
+    return any(class_name.startswith(prefix) for prefix in IGNORED_CLASS_PREFIXES)
 
 
 def is_ignored_method(label_name):
-    for name in IGNORED_CLASS_LABEL_NAMES:
-        if name == label_name:
-            return True
-    return False
+    return any(name == label_name for name in IGNORED_CLASS_LABEL_NAMES)
 
 
 #pragma mark - Save File
 
 def get_file_path(class_name):
-    return '%s/%s.m'%(path, class_name)
+    return f'{path}/{class_name}.m'
 
 
 def get_file_header(class_name):
@@ -62,11 +56,10 @@ def get_file_footer():
 #pragma mark - Decompile
 
 def parse_label_name(label_name):
-    result = re.search(r'^([+-])\[(.+)\s(.+)\]', label_name)
-    if result:
+    if result := re.search(r'^([+-])\[(.+)\s(.+)\]', label_name):
         symbol, class_name, method_name = result.groups()
         params_count = method_name.count(':')
-        params = tuple(['arg%d'%(i+2) for i in range(params_count)])
+        params = tuple('arg%d'%(i+2) for i in range(params_count))
         method_name = method_name.replace(':', ':(id)%s ')%(params)
         method_name = '%s (%%s)%s'%(symbol, method_name)
         return (class_name, method_name)
